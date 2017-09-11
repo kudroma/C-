@@ -13,7 +13,7 @@ CC            = gcc
 CXX           = g++
 DEFINES       = -DUNICODE -DQT_DEPRECATED_WARNINGS -DQT_QML_DEBUG -DQT_CORE_LIB
 CFLAGS        = -fno-keep-inline-dllexport -pipe -g -Wextra -Wall -W $(DEFINES)
-CXXFLAGS      = -fno-keep-inline-dllexport -pipe -g -std=gnu++11 -Wextra -Wall -W -fexceptions -mthreads $(DEFINES)
+CXXFLAGS      = -fno-keep-inline-dllexport -pipe -g -std=gnu++1y -Wextra -Wall -W -fexceptions -mthreads $(DEFINES)
 INCPATH       = -I..\Meyers_MovingToModernCplusplus -I. -ID:\programmingStudy\Сplusplus\typeD -IINCLUDEPATH -I+= -IC:\boost\boost_1_65_1 -IC:\Qt\5.9\mingw53_32\include -IC:\Qt\5.9\mingw53_32\include\QtCore -Idebug -IC:\Qt\5.9\mingw53_32\mkspecs\win32-g++ 
 LINKER      =        g++
 LFLAGS        =        -Wl,-subsystem,console -mthreads
@@ -95,7 +95,7 @@ compiler_moc_predefs_make_all: debug/moc_predefs.h
 compiler_moc_predefs_clean:
 	-$(DEL_FILE) debug\moc_predefs.h
 debug/moc_predefs.h: C:/Qt/5.9/mingw53_32/mkspecs/features/data/dummy.cpp
-	g++ -fno-keep-inline-dllexport -pipe -g -std=gnu++11 -Wextra -Wall -W -dM -E -o debug\moc_predefs.h C:\Qt\5.9\mingw53_32\mkspecs\features\data\dummy.cpp
+	g++ -fno-keep-inline-dllexport -pipe -g -std=gnu++1y -Wextra -Wall -W -dM -E -o debug\moc_predefs.h C:\Qt\5.9\mingw53_32\mkspecs\features\data\dummy.cpp
 
 compiler_moc_header_make_all:
 compiler_moc_header_clean:
