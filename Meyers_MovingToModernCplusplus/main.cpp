@@ -2,12 +2,17 @@
 #include <iostream>
 #include <deque>
 #include <typeinfo>
-#include <boost/type_index.hpp>
 #include <QObject>
 #include <functional>
 #include <memory>
 #include <QList>
 #include <QTimer>
+#include "boost/type_index.hpp"
+#include <mutex>
+#include <thread>
+#include <map>
+#include <unordered_map>
+#include <type_traits>
 
 /// this test application is devoted to testing of new c++ feature
 /// after Scott Meyers book
@@ -16,7 +21,7 @@
 ///
 
 template<typename T>
-void showTypeBoost(const T& param)
+void showTypeBoost(T& param)
 {
     using boost::typeindex::type_id_with_cvr;
 
@@ -48,6 +53,51 @@ private:
     int m_x{3};
     float m_f{1.1111};
 };
+
+/// item 8
+///
+template<typename FuncType,
+         typename MuxType,
+         typename PtrType>
+decltype(auto) lockAndCall(FuncType func,
+                           MuxType& mutex,
+                           PtrType ptr)
+{
+    std::lock_guard<std::mutex> g(mutex);
+    return func(ptr);
+}
+
+int f1(std::shared_ptr<QObject> ob)
+{
+    std::cout << "inside int f1(std::shared_ptr<QObject> ob)" << std::endl;
+    return 1;
+}
+
+double f2(std::unique_ptr<QObject> ob)
+{
+    std::cout << "inside double f2(std::unique_ptr<QObject> ob)" << std::endl;
+    return 1.1;
+}
+
+bool f3(QObject *ob)
+{
+    std::cout << "inside bool f3(QObject *ob)" << std::endl;
+    return true;
+}
+
+/// Item 9;
+/// alias declaration
+///
+using UPtrMapSS = std::unique_ptr<std::unordered_map<std::string, std::string> >;
+using Fp = void(*)(int,const std::string&);
+/// alias template
+///
+template<typename T>
+using MyVector = std::vector<T>;
+
+template<typename T>
+using removeConstAndRef = std::remove_const_t<std::remove_reference_t<T> >;
+
 
 int main(int argc, char *argv[])
 {
@@ -82,8 +132,53 @@ int main(int argc, char *argv[])
 ///
     if(true)
     {
+        std::cout << std::endl << std::endl << std:: endl << "Item 8: Prefer nullptr to 0 and NULL" << std::endl << std::endl;
+        QObject *o1 = nullptr;
+        auto o2 = o1;
+        if(o2 == nullptr)
+        {
+            std::cout << "o2 is null pointer!" << std::endl;
+        }
+        else
+        {
+            std::cout << "o2 is good pointer!" << std::endl;
+        }
+        std::mutex fm1, fm2, fm3;
+//        auto result1 = lockAndCall(f1,fm1,0);  /// type error. 0 - integer
+//        auto result2 = lockAndCall(f2,fm2,NULL);   /// type error. NULL - integer
+        auto result1 = lockAndCall(f1,fm1,nullptr);  /// all good
+        auto result2 = lockAndCall(f2,fm2,nullptr);  /// all good
+        auto result3 = lockAndCall(f3,fm3,nullptr);  /// all good
+    }
+
+/// Item 9: Prefer alias declarations to typdefs
+///
+    if(true)
+    {
+        std::cout <<  std::endl << std::endl << std:: endl << "Item 9: Prefer alias declarations to typdefs" << std::endl << std::endl;
+        MyVector<QObject*> myVector{new QObject, new QObject, new QObject};
+        std::cout << "vector contains " << myVector.size() << " elements" << std::endl;
+
+        /// type traits
+        ///
+        const int& x = 25;
+        std::cout << "type of x before type trait: " << std::endl;
+        showTypeBoost(x);
+        removeConstAndRef<decltype(x)> y;
+        std::cout << "type of y after type traits " << std::endl;
+        showTypeBoost(y);
+    }
+
+/// Item 10: Prefer scoped enums to unscoped enums
+///
+    if(true)
+    {
+        std::cout <<  std::endl << std::endl << std:: endl
+                   << "Item 10: Prefer scoped enums to unscoped enums"
+                   << std::endl << std::endl;
 
     }
+
 
     return a.exec();
 }
