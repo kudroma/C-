@@ -21,7 +21,7 @@
 ///
 
 template<typename T>
-void showTypeBoost(T& param)
+void showTypeBoost(T&& param)
 {
     using boost::typeindex::type_id_with_cvr;
 
@@ -97,6 +97,28 @@ using MyVector = std::vector<T>;
 
 template<typename T>
 using removeConstAndRef = std::remove_const_t<std::remove_reference_t<T> >;
+
+/// Item 10. Function for return of enumerator type
+///
+template<typename E>
+constexpr auto
+  toUtype(E enumerator) noexcept
+{
+    return static_cast<std::underlying_type_t<E> >(enumerator);
+}
+
+/// Item 11. Prefer deleted functions to undefined private ones.
+///
+template<typename T>
+void sayAboutPointer(T* ptr)
+{
+    std::cout << "I can say about ptr" << std::endl;
+}
+template<> void sayAboutPointer(void* ptr) = delete;
+template<> void sayAboutPointer(char* ptr) = delete;
+
+
+
 
 
 int main(int argc, char *argv[])
@@ -175,6 +197,78 @@ int main(int argc, char *argv[])
     {
         std::cout <<  std::endl << std::endl << std:: endl
                    << "Item 10: Prefer scoped enums to unscoped enums"
+                   << std::endl << std::endl;
+
+         enum UnscopedEnum {black, white, red};
+        //auto white = 1;  /// error. Unscoped enums capture names
+        enum class  ScopedEnum {black, white, red, green};
+        auto green = 1; /// all good. Scoped enums don't capture names
+        auto c = ScopedEnum::black;
+        //auto c = black;  /// error. black of ScopedEnum doesn't exist outside its scope
+        if(black < 14.5) // &&
+               // ScopedEnum::black < 14.3) /// error. we can't compare scoped enum values with float
+        {
+          //  std::cout << "Ai-ai-ai" << std::endl;
+        }
+        //enum Color;  /// unscoped enums can't be forward declared
+        enum class Color;
+        enum class Status: std::uint32_t {status}; /// set underlying enum type for Status
+        enum UnscopedStatus: std::uint8_t; /// we can do it for unscoped enums too
+        /// using unscoped enums to get elements from tuples
+        ///
+        using UserInfo = std::tuple<std::string,std::string,std::size_t>;
+        enum UserInfoFields {uName, uEmail, uReputation};
+        UserInfo uinfo = std::make_tuple(std::string("Raman"), std::string("kudroma@list.ru"), 5);
+        auto name = std::get<uName>(uinfo);
+        auto email = std::get<uEmail>(uinfo);
+        auto reputation = std::get<uReputation>(uinfo);
+        std::cout << name << " " << email << " " << reputation << std::endl;
+        std::cout << "underlying type for ScopedEnum: " << std::endl;
+        showTypeBoost(toUtype(ScopedEnum::black));
+        std::cout << std::endl;
+        std::cout << "underlying type for UnscopedEnum: " << std::endl;
+        showTypeBoost(toUtype(black));
+        std::cout << std::endl;
+        std::cout << "underlying type for std::uint32_t Status enum: " << std::endl;
+        showTypeBoost(toUtype(Status::status));
+        std::cout << std::endl;
+    }
+
+/// Item 11: Prefer deleted functions to private undefined ones
+///
+    if(true)
+    {
+        std::cout <<  std::endl << std::endl << std:: endl
+                   << "Item 11: Prefer deleted functions to private undefined ones"
+                   << std::endl << std::endl;
+        class ClassWithDeletedFuncions
+        {
+        public:
+            ClassWithDeletedFuncions()
+            {
+                std::cout << "create ClassWithDeletedFunctions object";
+            }
+
+            ClassWithDeletedFuncions(const ClassWithDeletedFuncions&) = delete;
+            ClassWithDeletedFuncions& operator=(const ClassWithDeletedFuncions&) = delete;
+        };
+
+        ClassWithDeletedFuncions object1;
+        // ClassWithDeletedFuncions object2 = object1; /// error because assignment operator is deleted
+        int* ptr1 = nullptr;
+        void* ptr2 = nullptr;
+        char* ptr3 = nullptr;
+        sayAboutPointer(ptr1);
+//        sayAboutPointer(ptr2);  /// void* ptr function realization is deleted
+//        sayAboutPointer(ptr3);  /// char* ptr function realization is deleted
+    }
+
+/// Item 12: Declare overriding functions override
+///
+    if(true)
+    {
+        std::cout <<  std::endl << std::endl << std:: endl
+                   << "Item 12: Declare overriding functions override"
                    << std::endl << std::endl;
 
     }
