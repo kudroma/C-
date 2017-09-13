@@ -107,6 +107,20 @@ constexpr auto
     return static_cast<std::underlying_type_t<E> >(enumerator);
 }
 
+/// Item 11. Prefer deleted functions to undefined private ones.
+///
+template<typename T>
+void sayAboutPointer(T* ptr)
+{
+    std::cout << "I can say about ptr" << std::endl;
+}
+template<> void sayAboutPointer(void* ptr) = delete;
+template<> void sayAboutPointer(char* ptr) = delete;
+
+
+
+
+
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
@@ -226,6 +240,35 @@ int main(int argc, char *argv[])
     {
         std::cout <<  std::endl << std::endl << std:: endl
                    << "Item 11: Prefer deleted functions to private undefined ones"
+                   << std::endl << std::endl;
+        class ClassWithDeletedFuncions
+        {
+        public:
+            ClassWithDeletedFuncions()
+            {
+                std::cout << "create ClassWithDeletedFunctions object";
+            }
+
+            ClassWithDeletedFuncions(const ClassWithDeletedFuncions&) = delete;
+            ClassWithDeletedFuncions& operator=(const ClassWithDeletedFuncions&) = delete;
+        };
+
+        ClassWithDeletedFuncions object1;
+        // ClassWithDeletedFuncions object2 = object1; /// error because assignment operator is deleted
+        int* ptr1 = nullptr;
+        void* ptr2 = nullptr;
+        char* ptr3 = nullptr;
+        sayAboutPointer(ptr1);
+//        sayAboutPointer(ptr2);  /// void* ptr function realization is deleted
+//        sayAboutPointer(ptr3);  /// char* ptr function realization is deleted
+    }
+
+/// Item 12: Declare overriding functions override
+///
+    if(true)
+    {
+        std::cout <<  std::endl << std::endl << std:: endl
+                   << "Item 12: Declare overriding functions override"
                    << std::endl << std::endl;
 
     }
