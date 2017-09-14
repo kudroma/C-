@@ -118,6 +118,49 @@ template<> void sayAboutPointer(void* ptr) = delete;
 template<> void sayAboutPointer(char* ptr) = delete;
 
 
+/// Item 12. Declare overriding functions override
+///
+/// class with reference qualifiers
+class classWithOverriding
+{
+public:
+    void doWork() &
+    {
+        std::cout << "this version of doWork is for lvalues" << std::endl;
+    }
+
+    void doWork() &&
+    {
+        std::cout << "this version of doWork is for rvalues" << std::endl;
+    }
+    virtual void f1() &
+    {
+        std::cout << "this is base function" << std::endl;
+    }
+
+    virtual void f2() &
+    {
+
+    }
+};
+classWithOverriding getObject()
+{
+    return *(new classWithOverriding());
+}
+class derivedClassWithOverriding : public classWithOverriding
+{
+public:
+//    virtual void f1() && override
+//    {
+//        std::cout << "this is wrongly override function in derived class" << std::endl;
+//    } /// error because conditions for overriding is not good
+    void f2() & override
+    {
+
+    }
+};
+
+
 
 
 
@@ -271,7 +314,44 @@ int main(int argc, char *argv[])
                    << "Item 12: Declare overriding functions override"
                    << std::endl << std::endl;
 
+        classWithOverriding object1;
+        object1.doWork(); /// call member function version for lvalue
+        getObject().doWork(); /// call member function version for rvalue
     }
+
+/// Item 13: Prefer const_iterators to iterators
+///
+    if(true)
+    {
+        std::cout <<  std::endl << std::endl << std:: endl
+                   << "Item 13: Prefer const_iterators to iterators"
+                   << std::endl << std::endl;
+        std::vector<int> years {1983,1986,2011,2014,2017};
+        for(int i = 0; i < years.size(); i++)
+        {
+            std::cout << years.at(i) << " ";
+        }
+        std::cout << std::endl;
+        auto it = std::find(years.cbegin(),years.cend(),1983);
+        years.insert(it,1998);
+        for(int i = 0; i < years.size(); i++)
+        {
+            std::cout << years.at(i) << " ";
+        }
+        std::cout << std::endl;
+        std::cbegin(years); /// compiles in C++14 but not in C++11
+    }
+
+/// Item 14: Declare functions noexcept if they won't emit exceptions
+///
+    if(true)
+    {
+        std::cout <<  std::endl << std::endl << std:: endl
+                   << "Item 14: Declare functions noexcept if they won't emit exceptions"
+                   << std::endl << std::endl;
+
+    }
+
 
 
     return a.exec();
