@@ -160,8 +160,79 @@ public:
     }
 };
 
+/// Item 14: Declare functions noexcept if they won't emit exceptions
+///
+void withNoExceptionFunction() noexcept
+{
+    std::cout << "This function has never emit exception" << std::endl;
+}
+void status()
+{
+    std::cout << "I can emit exception! And I'm not catch by compiler!" << std::endl;
+}
+void compilerNotDetectableProgblem() noexcept
+{
+    std::cout << "This function may emit exception but compiler doesn't see this!" << std::endl;
+    status();
+}
 
+/// Item 15: Use constexpr whenever possible
+///
+/// this function is not valid in C++11. Because constexpr functions here must contain only one statement with return.
+///
+constexpr int pow(float base, int exp)
+{
+    auto result = 1;
+    for(int i = 0; i < exp; i++) result *= base;
+    return result;
+}
+/// class objects of which can be constexpr
+///
+class Point
+{
+public:
 
+    constexpr Point(double x = 0, double y = 0) noexcept :
+        m_x(x),
+        m_y(y)
+    {}
+
+    constexpr double x() const
+    {
+        return m_x;
+    }
+    constexpr void setX(double x)
+    {
+        m_x = x;
+    }
+
+    constexpr double y() const
+    {
+        return m_y;
+    }
+    constexpr void setY(double y)  /// in C++11 setters can't be constexpr, because they are not const and void is no literal. In C++14 it is possible.
+    {
+        m_y = y;
+    }
+
+private:
+    double m_x, m_y;
+};
+/// constexpr function using constexpr user-defined type Point
+///
+constexpr Point midPoint(Point point1, Point point2)
+{
+    return Point((point1.x() + point2.x())/2,(point1.y() + point2.y())/2);
+}
+/// constexpr function using setters of constexpr object
+///
+constexpr Point reflection(const Point& point)
+{
+    Point result;
+    result.setX(-point.x());
+    result.setY(-point.y());
+    return result;
+}
 
 
 int main(int argc, char *argv[])
@@ -349,11 +420,46 @@ int main(int argc, char *argv[])
         std::cout <<  std::endl << std::endl << std:: endl
                    << "Item 14: Declare functions noexcept if they won't emit exceptions"
                    << std::endl << std::endl;
+        withNoExceptionFunction();
+        compilerNotDetectableProgblem();
+    }
 
+/// Item 15: Use constexpr whenever possible
+///
+    if(true)
+    {
+        std::cout <<  std::endl << std::endl << std:: endl
+                   << "Item 15: Use constexpr whenever possible"
+                   << std::endl << std::endl;
+        int sz;
+        //constexpr auto arraySize = sz; /// error! this variable is not known during compilation time!
+        //std::array<int,sz> data1; /// the same problem
+        constexpr auto arraySizeGood = 10;
+        std::array<int,arraySizeGood> arrayGood; /// all good. arraySizeGood is known during translation time.
+        const auto wrongArraySize = sz;
+        //std::array<int,wrongArraySize> wrongArray; /// error. const value can be unknown during compilation time.
+        std::array<int,pow(arraySizeGood,3)> arraySizeWithConsexprFunction;
+        //std::array<int,pow(wrongArraySize,3)> arraySizeWithConsexprFunctionNotKnownInCompileTime; /// error because constexpr function here
+                                                                                                  /// not return known in compile time value
+        constexpr Point point1(0.991, 0.9821); /// in C++14 objects can be consexpr
+
+        constexpr Point point2(1.234,-1.141);
+        constexpr auto mid = midPoint(point1,point2);
+        std::cout << "midPoint = (" << mid.x() << "," << mid.y() << ")" << std::endl;
+        constexpr auto reflrectedPoint1 = reflection(point1);
+        std::cout << "reflrectedPoint1 = (" << reflrectedPoint1.x() << "," << reflrectedPoint1.y() << ")" << std::endl;
     }
 
 
+    /// Item 16: Make const member functions thread safe
+    ///
+        if(true)
+        {
+            std::cout <<  std::endl << std::endl << std:: endl
+                       << "Item 16: Make const member functions thread safe "
+                       << std::endl << std::endl;
+
+        }
 
     return a.exec();
 }
-
