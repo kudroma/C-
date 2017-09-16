@@ -235,6 +235,115 @@ constexpr Point reflection(const Point& point)
 }
 
 
+/// Item 16: Make const member functions thread safe
+///
+/// class with caching and mutable
+///
+class classWithCaching
+{
+public:
+    virtual double computeValue() const
+    {
+        std::cout << "value before computing: " << cachedValue << std::endl;
+
+        if(!isCached)
+        {
+            isCached = true;
+            cachedValue = 19.2;
+            std::cout << "value is actually computed and is equeal: " << cachedValue << std::endl;
+        }
+        else
+        {
+            std::cout << "value is get from cache!" << std::endl;
+        }
+        return cachedValue;
+    }
+protected:
+    mutable bool isCached {false};
+    mutable double cachedValue {0};
+};
+classWithCaching object_caching;
+void callFromThread12()
+{
+    object_caching.computeValue();
+}
+class classWithCachingAndMutex : public classWithCaching
+{
+public:
+    virtual double computeValue() const override
+    {
+        std::lock_guard<std::mutex> g(m);
+        return classWithCaching::computeValue();
+    }
+protected:
+    mutable std::mutex m;
+};
+classWithCachingAndMutex object_caching_mutex;
+void callFromThread34()
+{
+    object_caching_mutex.computeValue();
+}
+class HowManyTimes
+{
+public:
+    virtual void howManyTimes() const
+    {
+        std::cout << m_callCount << std::endl;
+        m_callCount++;
+    }
+private:
+    mutable int m_callCount {1};
+};
+HowManyTimes howManyTimes;
+void callFromThread5()
+{
+    for(int i = 0; i < 20; i++)
+    {
+        std::cout << "from thread 5 call - ";
+        howManyTimes.howManyTimes();
+    }
+}
+void callFromThread6()
+{
+    for(int i = 0; i < 20; i++)
+    {
+        std::cout << "from thread 6 call - ";
+        howManyTimes.howManyTimes();
+    }
+}
+class HowManyTimesWithAtomic : public HowManyTimes
+{
+public:
+    virtual void howManyTimes() const override
+    {
+        std::cout << callCount << std::endl;
+        callCount++;
+    }
+private:
+    mutable std::atomic<unsigned> callCount {1};
+};
+HowManyTimesWithAtomic howManyTimesWithAtomic;
+void callFromThread7()
+{
+    for(int i = 0; i < 20; i++)
+    {
+        std::cout << "from thread 7 call - ";
+        howManyTimesWithAtomic.howManyTimes();
+    }
+}
+void callFromThread8()
+{
+    for(int i = 0; i < 20; i++)
+    {
+        std::cout << "from thread 8 call - ";
+        howManyTimesWithAtomic.howManyTimes();
+    }
+}
+
+
+
+
+
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
@@ -266,7 +375,7 @@ int main(int argc, char *argv[])
 
 /// Item 8: Prefer nullptr to 0 and NULL
 ///
-    if(true)
+    if(true);
     {
         std::cout << std::endl << std::endl << std:: endl << "Item 8: Prefer nullptr to 0 and NULL" << std::endl << std::endl;
         QObject *o1 = nullptr;
@@ -451,15 +560,50 @@ int main(int argc, char *argv[])
     }
 
 
-    /// Item 16: Make const member functions thread safe
-    ///
-        if(true)
-        {
-            std::cout <<  std::endl << std::endl << std:: endl
-                       << "Item 16: Make const member functions thread safe "
-                       << std::endl << std::endl;
+/// Item 16: Make const member functions thread safe
+///
+    if(true)
+    {
+        std::cout <<  std::endl << std::endl << std:: endl
+                   << "Item 16: Make const member functions thread safe "
+                   << std::endl << std::endl;
+        classWithCaching object1;
+        object1.computeValue();
+        object1.computeValue();
+        object1.computeValue();
+        /// demonstration of data race
+        ///
+        std::cout << std::endl << "thread unsafety demonstration" << std::endl;
+        std::thread first(callFromThread12);
+        std::thread second(callFromThread12);
+        first.join();
+        second.join();
 
-        }
+        /// solution problem with mutex
+        ///
+        std::cout << std::endl << "thread SAFETY with mutex" << std::endl;
+        std::thread third(callFromThread34);
+        std::thread fourth(callFromThread34);
+        third.join();
+        fourth.join();
+
+        /// how many times without atomic
+        ///
+        std::cout << std::endl << "how many times without atomic: " << std::endl;
+        std::thread fifth(callFromThread5);
+        std::thread sixth(callFromThread6);
+        fifth.join();
+        sixth.join();
+
+        /// how many times without atomic
+        ///
+        std::cout << std::endl << "how many times WITH atomic: " << std::endl;
+        std::thread seventh(callFromThread7);
+        std::thread eightth(callFromThread8);
+        seventh.join();
+        eightth.join();   /// there is problem connected with two statements in functions callFromThread7 and callFromThread8
+
+    }
 
     return a.exec();
 }
