@@ -340,7 +340,81 @@ void callFromThread8()
     }
 }
 
+/// Item 17: Understand special member functino generation
+/// 
+class WidgetWithAllDefaultOperations
+{
+public:
+    WidgetWithAllDefaultOperations() = default;
+    WidgetWithAllDefaultOperations(WidgetWithAllDefaultOperations&& rhs){}   /// move constructor
+    WidgetWithAllDefaultOperations& operator=(WidgetWithAllDefaultOperations&& rhs){} /// move assignment operator
+    WidgetWithAllDefaultOperations(WidgetWithAllDefaultOperations& rhs) = default;
+    WidgetWithAllDefaultOperations& operator=(WidgetWithAllDefaultOperations& rhs) = default;
+    virtual ~WidgetWithAllDefaultOperations() = default;
+};
+class WidgetWithCopyConstructorOnly
+{
+public:
+    WidgetWithCopyConstructorOnly(){}
+    WidgetWithCopyConstructorOnly(WidgetWithCopyConstructorOnly& rhs)
+    {
+        std::cout << "WidgetWithCopyConstructorOnly - inside copy constructor" << std::endl;
+    }
+    virtual ~WidgetWithCopyConstructorOnly()
+    {
+        std::cout << "WidgetWithCopyConstructorOnly - inside destructor" << std::endl;
+    }
+};
 
+class WidgetWithMoveConstructorOnly
+{
+public:
+    WidgetWithMoveConstructorOnly() = default;
+    WidgetWithMoveConstructorOnly(WidgetWithMoveConstructorOnly&& rhs)
+    {
+        std::cout << "WidgetWithMoveConstructorOnly - inside move constructor" << std::endl;
+    }
+    WidgetWithMoveConstructorOnly& operator=(WidgetWithMoveConstructorOnly& rhs) = default;
+    virtual ~WidgetWithMoveConstructorOnly()
+    {
+        std::cout << "WidgetWithMoveConstructorOnly - inside destructor" << std::endl;
+    }
+};
+
+class WidgetWithAllOperationsDeclared
+{
+public:
+    WidgetWithAllOperationsDeclared() = default;
+    WidgetWithAllOperationsDeclared(WidgetWithAllOperationsDeclared&& rhs)
+    {
+        std::cout << "WidgetWithAllOperationsDeclared - inside move constructor" << std::endl;
+    }
+    WidgetWithAllOperationsDeclared& operator=(WidgetWithAllOperationsDeclared& rhs) = default;
+    WidgetWithAllOperationsDeclared& operator=(WidgetWithAllOperationsDeclared&& rhs)
+    {
+        std::cout << "here!";
+    }
+    WidgetWithAllOperationsDeclared(WidgetWithAllOperationsDeclared& rhs)
+    {
+        std::cout << "WidgetWithAllOperationsDeclared - inside copy constructor" << std::endl;
+    }
+    virtual ~WidgetWithAllOperationsDeclared()
+    {
+        std::cout << "WidgetWithAllOperationsDeclared - inside destructor" << std::endl;
+    }
+};
+WidgetWithAllDefaultOperations GetWidgetWithAllDefaultOperations(){return WidgetWithAllDefaultOperations();}
+//WidgetWithCopyConstructorOnly GetWidgetWithCopyConstructorOnly(){return WidgetWithCopyConstructorOnly();}  /// error. There is no move constructor in class
+WidgetWithMoveConstructorOnly GetWidgetWithMoveConstructorOnly(){return WidgetWithMoveConstructorOnly();}
+WidgetWithAllOperationsDeclared GetWidgetWithAllOperationsDeclared(){return WidgetWithAllOperationsDeclared();}
+void GiveMeCopyOfWidget(WidgetWithAllDefaultOperations){}
+void GiveMeCopyOfWidget(WidgetWithCopyConstructorOnly){}
+void GiveMeCopyOfWidget(WidgetWithMoveConstructorOnly){}
+void GiveMeCopyOfWidget(WidgetWithAllOperationsDeclared){}
+void MoveWidgetToMe(WidgetWithAllDefaultOperations&&){}
+void MoveWidgetToMe(WidgetWithCopyConstructorOnly&&){}
+void MoveWidgetToMe(WidgetWithMoveConstructorOnly&&){}
+void MoveWidgetToMe(WidgetWithAllOperationsDeclared&&){}
 
 
 
@@ -602,8 +676,35 @@ int main(int argc, char *argv[])
         std::thread eightth(callFromThread8);
         seventh.join();
         eightth.join();   /// there is problem connected with two statements in functions callFromThread7 and callFromThread8
-
     }
 
+/// Item 17: Understand special member functino generation
+///
+    if(true)
+    {
+        std::cout <<  std::endl << std::endl << std:: endl
+                   << "Item 17: Understand special member functino generation"
+                   << std::endl << std::endl;
+
+        std::cout << std::endl << "Class with all special member functions = default" << std::endl;
+        WidgetWithAllDefaultOperations widget1;
+        GiveMeCopyOfWidget(widget1);
+        MoveWidgetToMe(GetWidgetWithAllDefaultOperations());
+
+        std::cout << std::endl << "Class with only copy ctors" << std::endl;
+        WidgetWithCopyConstructorOnly widget2;
+        GiveMeCopyOfWidget(widget2);
+
+        std::cout << std::endl << "Class with only move ctors" << std::endl;
+        WidgetWithMoveConstructorOnly&& widget3 = WidgetWithMoveConstructorOnly();
+        //GiveMeCopyOfWidget(widget3); /// error. Copying is not possible. There is no generated copy ctors...
+        MoveWidgetToMe(GetWidgetWithMoveConstructorOnly()); /// there is no call from move ctor. But moving takes place.
+
+        std::cout << std::endl << "Class with all special member functions" << std::endl;
+        WidgetWithAllOperationsDeclared widget4;
+        GiveMeCopyOfWidget(widget4);
+        MoveWidgetToMe(GetWidgetWithAllOperationsDeclared()); /// there is no call from move ctor. But moving takes place.
+    }
+    
     return a.exec();
 }
