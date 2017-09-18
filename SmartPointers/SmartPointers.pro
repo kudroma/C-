@@ -16,5 +16,5 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += main.cpp
 
-#INCLUDEPATH += "C:\Program Files\boost\boost_1_65_1"
-INCLUDEPATH += C:\boost\boost_1_65_1
+INCLUDEPATH += "C:\Program Files\boost\boost_1_65_1"
+#INCLUDEPATH += C:\boost\boost_1_65_1

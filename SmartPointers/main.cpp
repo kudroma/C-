@@ -116,6 +116,38 @@ auto createInvestmentWithOwnDeleter(std::string type = "")
     return pInv;
 }
 
+/// Item 20: Use std::weak_ptr for std::shared_ptr like pointers that can dangle
+///
+std::shared_ptr<Investment> fastLoadInvestment()
+{
+    static std::weak_ptr<Investment> wInv;
+    static int i = 0;
+    if(!i)
+    {
+        /// first call to function!
+        ///
+        std::shared_ptr<Investment> inv;
+        std::cout << "creation of cache!" << std::endl;
+        inv = std::shared_ptr<Investment>(new Investment);
+        wInv = inv;
+        i++;
+        return inv;
+    }
+    else
+    {
+        auto invShp = wInv.lock();
+        if(invShp)
+        {
+            std::cout << "object is not dangled!" << std::endl;
+        }
+        else
+        {
+            std::cout << "object is dangled!" << std::endl;
+        }
+        i++;
+        return invShp;
+    }
+}
 
 
 
@@ -172,6 +204,54 @@ int main(int argc, char *argv[])
     {
         std::cout <<  std::endl << std::endl << std:: endl
                    << "Item 20: Use std::weak_ptr for std::shared_ptr like pointers that can dangle"
+                   << std::endl << std::endl;
+
+        auto invShp = std::make_shared<Investment>();
+        auto weakInvPtr = std::weak_ptr<Investment>(invShp); /// create weak pointer from shared pointer
+        std::cout << "if weak pointer is expired: " << weakInvPtr.expired() << std::endl;
+        invShp = nullptr; /// Investment is destroyed and weakInvPtr now dangles
+        std::cout << "after deletion of Investment" << std::endl;
+        std::cout << "if weak pointer is expired: " << weakInvPtr.expired() << std::endl;
+        auto possibleShp = weakInvPtr.lock(); /// create shared pointer from weak in a thread safety manner
+        if(possibleShp == nullptr)
+        {
+            std::cout << "locked pointer is nullptr!" << std::endl;
+        }
+        try{
+            std::shared_ptr<Investment> possibleShp(weakInvPtr); /// second way to allocate shared ptr from weak one. If weak is expired there is exception thrown.
+        }
+        catch(std::bad_weak_ptr)
+        {
+            std::cout << "exception! You've tried to allocate bad weak pointer!" << std::endl;
+        }
+        /// factory method with caching
+        ///
+        constexpr int number = 10;
+        std::vector<std::shared_ptr<Investment> > invs{number};
+        for( int i = 0; i < number; i++)
+        {
+            invs[i] = fastLoadInvestment();
+        }
+        /// clean invs
+        ///
+        for(int i = 0; i < number; i++)
+        {
+            std::cout << "reference count is - " << invs[i].use_count() << std::endl;
+            invs[i] = nullptr;
+        }
+        possibleShp = fastLoadInvestment();
+        if(!possibleShp)
+        {
+            std::cout << "now factory can't produced Investment because cache is clear!" << std::endl;
+        }
+    }
+
+/// Item 21: Prefer std::make_unique and std::make_shared to direct use of new
+///
+    if(true)
+    {
+        std::cout <<  std::endl << std::endl << std:: endl
+                   << "Item 21: Prefer std::make_unique and std::make_shared to direct use of new"
                    << std::endl << std::endl;
 
     }
