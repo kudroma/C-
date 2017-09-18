@@ -149,7 +149,17 @@ std::shared_ptr<Investment> fastLoadInvestment()
     }
 }
 
-
+/// Item 21: Prefer std::make_unique and std::make_shared to direct use of new
+///
+void processInvestment(std::shared_ptr<Investment> inv, int priority)
+{
+    std::cout << "function is called!" << std::endl;
+}
+int getPriority()
+{
+    throw 1;
+    return 1;
+}
 
 
 int main(int argc, char *argv[])
@@ -254,7 +264,51 @@ int main(int argc, char *argv[])
                    << "Item 21: Prefer std::make_unique and std::make_shared to direct use of new"
                    << std::endl << std::endl;
 
+        std::shared_ptr<Investment> inv1 = std::make_shared<Investment>();
+        std::unique_ptr<Investment> inv2 = std::make_unique<Investment>(); /// this won't compile in C++11
+        auto inv3(std::make_shared<Investment>());
     }
+
+    /// demonstration of memory leaks
+    ///
+    processInvestment(std::make_shared<Investment>(),2);
+    for(int i = 0; i < 5; i++)
+    {
+        try{
+            processInvestment((std::shared_ptr<Investment>(new Investment())),getPriority());
+        }
+        catch(int a)
+        {
+            std::cout << "exception is catched and memory leak is possible !" << std::endl;
+        };
+    }
+    /// there is no memory leaks
+    ///
+    for(int i = 0; i < 5; i++)
+    {
+        try{
+            processInvestment(std::make_shared<Investment>(),getPriority());
+        }
+        catch(int a)
+        {
+            std::cout << "exception is catched but memory leak is impossible !" << std::endl;
+        };
+    }
+    /// another exception safe way with effective performance
+    ///
+    for(int i = 0; i < 5; i++)
+    {
+        try{
+            auto cusDel = [](Investment* inv){delete inv;};
+            std::shared_ptr<Investment> inv(new Investment, cusDel);
+            processInvestment(std::move(inv),getPriority());
+        }
+        catch(int a)
+        {
+            std::cout << "exception is catched but memory leak is impossible !" << std::endl;
+        };
+    }
+
 
     return a.exec();
 }
