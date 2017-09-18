@@ -16,6 +16,7 @@
 #include <QDebug>
 #include <QFile>
 #include <fstream>
+#include <widget.h>
 
 /// this test application is devoted to testing of new c++ feature
 /// after Scott Meyers book
@@ -267,48 +268,62 @@ int main(int argc, char *argv[])
         std::shared_ptr<Investment> inv1 = std::make_shared<Investment>();
         std::unique_ptr<Investment> inv2 = std::make_unique<Investment>(); /// this won't compile in C++11
         auto inv3(std::make_shared<Investment>());
+        /// demonstration of memory leaks
+        ///
+        processInvestment(std::make_shared<Investment>(),2);
+        for(int i = 0; i < 5; i++)
+        {
+            try{
+                processInvestment((std::shared_ptr<Investment>(new Investment())),getPriority());
+            }
+            catch(int a)
+            {
+                std::cout << "exception is catched and memory leak is possible !" << std::endl;
+            };
+        }
+        /// there is no memory leaks
+        ///
+        for(int i = 0; i < 5; i++)
+        {
+            try{
+                processInvestment(std::make_shared<Investment>(),getPriority());
+            }
+            catch(int a)
+            {
+                std::cout << "exception is catched but memory leak is impossible !" << std::endl;
+            };
+        }
+        /// another exception safe way with effective performance
+        ///
+        for(int i = 0; i < 5; i++)
+        {
+            try{
+                auto cusDel = [](Investment* inv){delete inv;};
+                std::shared_ptr<Investment> inv(new Investment, cusDel);
+                processInvestment(std::move(inv),getPriority());
+            }
+            catch(int a)
+            {
+                std::cout << "exception is catched but memory leak is impossible !" << std::endl;
+            };
+        }
     }
 
-    /// demonstration of memory leaks
-    ///
-    processInvestment(std::make_shared<Investment>(),2);
-    for(int i = 0; i < 5; i++)
+/// Item 22: When using the Pimpl idiom, define special member functions int the implementation file
+///
+    if(true)
     {
-        try{
-            processInvestment((std::shared_ptr<Investment>(new Investment())),getPriority());
-        }
-        catch(int a)
-        {
-            std::cout << "exception is catched and memory leak is possible !" << std::endl;
-        };
+        std::cout <<  std::endl << std::endl << std:: endl
+                   << "Item 22: When using the Pimpl idiom, define special member "
+                   << "functions int the implementation file"
+                   << std::endl << std::endl;
+        auto w1 = std::make_shared<Widget>();
+        w1 = nullptr;
+        auto lambda = [](Widget&&){std::cout << "moving Widget!" << std::endl;};
+        lambda(Widget());
+        Widget w2;
+        Widget w3 = w2; /// there is call of copy ctor not operator=. I don't know why...
     }
-    /// there is no memory leaks
-    ///
-    for(int i = 0; i < 5; i++)
-    {
-        try{
-            processInvestment(std::make_shared<Investment>(),getPriority());
-        }
-        catch(int a)
-        {
-            std::cout << "exception is catched but memory leak is impossible !" << std::endl;
-        };
-    }
-    /// another exception safe way with effective performance
-    ///
-    for(int i = 0; i < 5; i++)
-    {
-        try{
-            auto cusDel = [](Investment* inv){delete inv;};
-            std::shared_ptr<Investment> inv(new Investment, cusDel);
-            processInvestment(std::move(inv),getPriority());
-        }
-        catch(int a)
-        {
-            std::cout << "exception is catched but memory leak is impossible !" << std::endl;
-        };
-    }
-
 
     return a.exec();
 }
