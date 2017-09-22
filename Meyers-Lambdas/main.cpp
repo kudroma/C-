@@ -69,6 +69,11 @@ public:
 private:
     int divisor;
 };
+/// Item 33: Use decltype to auto&& parameters to std::forward them
+///
+template<typename... Types>
+void funcT(Types&&... params){std::cout << "inside function funcT" << std::endl;}
+
 
 
 
@@ -109,6 +114,56 @@ int main(int argc, char *argv[])
         wrongLambda object;
         object.func2();
     }
+
+/// Item 32: Use init capture to move objects into closures
+///
+    if(true)
+    {
+        std::cout <<  std::endl << std::endl << std:: endl
+                   << "Item 32: Use init capture to move objects into closures"
+                   << std::endl << std::endl;
+
+        auto inv = std::make_unique<Investment>();
+        //auto lambdaWrong = [inv](){std::cout << inv->x() << std::endl;}; /// error, because unique_ptr is move-only type.
+        auto lambdaGood = [inv = std::move(inv)](){std::cout << "Init capture is good - therefore get " << inv->x() << std::endl;};
+        lambdaGood();
+        auto func = [inv = std::make_unique<Investment>()]() {std::cout << "init capture is good! " << inv->x() << std::endl;};
+        func();
+    }
+
+
+/// Item 33: Use decltype to auto&& parameters to std::forward them
+///
+    if(true)
+    {
+        std::cout <<  std::endl << std::endl << std:: endl
+                   << "Item 33: Use decltype to auto&& parameters to std::forward them"
+                   << std::endl << std::endl;
+        /// lambda with perfect forwarding
+        ///
+        auto f = [](auto&& param)
+        {
+            funcT(std::forward<decltype(param)>(param));
+        };
+        /// variadic lambdas
+        ///
+        auto fVar = [](auto&&... params)
+        {
+            funcT(std::forward<decltype(params)>(params)...);
+        };
+        fVar(1,2,3,"dfsfsdfs",Investment(),std::move(Investment()));
+    }
+
+/// Item 34: Prefer lambdas to std::bind
+///
+    if(true)
+    {
+        std::cout <<  std::endl << std::endl << std:: endl
+                   << "Item 34: Prefer lambdas to std::bind"
+                   << std::endl << std::endl;
+
+    }
+
 
     return a.exec();
 }
