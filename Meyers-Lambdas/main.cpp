@@ -24,7 +24,7 @@
 /// this test application is devoted to testing of new c++ feature
 /// after Scott Meyers book
 ///
-/// Chapter3: Moving to Modern C++
+/// Chapter6: Lambdas
 ///
 
 template<typename T>
@@ -50,7 +50,25 @@ private:
     int m_x{1};
 };
 
+/// Item 31: Avoid default capture modes
+///
+/// class members are not captured from lambdas in member functions
+class wrongLambda
+{
+public:
+    void func()
+    {
+        //auto lambda = [divisor](){};  /// error. Non-local variable can't be captured by lambda.
+    }
+    void func2()
+    {
+        auto lambda = [divisor = divisor](){std::cout << "inside lambda of func2!" << std::endl;}; /// generalized lambda capture of C++14
+        lambda();
+    }
 
+private:
+    int divisor;
+};
 
 
 
@@ -88,6 +106,8 @@ int main(int argc, char *argv[])
         /// why???
         ///
         std::cout << "lambda call with local variable by value capture: " << filters[2](10) << std::endl;
+        wrongLambda object;
+        object.func2();
     }
 
     return a.exec();
