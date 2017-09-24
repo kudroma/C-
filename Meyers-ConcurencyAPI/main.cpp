@@ -20,11 +20,12 @@
 #include <set>
 #include <chrono>
 #include <utility>
+#include <future>
 
 /// this test application is devoted to testing of new c++ feature
 /// after Scott Meyers book
 ///
-/// Chapter6: Lambdas
+/// Chapter6: Concurrency API
 ///
 
 template<typename T>
@@ -59,13 +60,29 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-/// Item 34: Prefer lambdas to std::bind
+/// Item 35: Prefer task based programming to thread based
 ///
     if(true)
     {
         std::cout <<  std::endl << std::endl << std:: endl
-                   << "Item 34: Prefer lambdas to std::bind"
+                   << "Item 35: Prefer task based programming to thread based"
                    << std::endl << std::endl;
+        int i = std::atomic<int>(0);
+        auto func1 = [&i](){/*std::cout << "in func1. i = " << i++ << std::endl;*/};
+        auto func2 = [&i](){std::cout << "in func2. i = " << i++ << std::endl;};
+        auto thread1 = std::thread(func1); /// thread based approach
+        auto async = std::async(func2);   /// task based approach
+        std::vector<std::thread> threads(1000);
+        try{
+            for(int j = 0; j < 1000; j++)
+            {
+                threads[j] = std::thread(func1);
+            }
+        }
+        catch(std::system_error)
+        {
+            std::cout << "too many system threads!" << std::endl;
+        }
 
     }
 
