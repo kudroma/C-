@@ -161,7 +161,8 @@ int main(int argc, char *argv[])
         std::cout <<  std::endl << std::endl << std:: endl
                    << "Item 34: Prefer lambdas to std::bind"
                    << std::endl << std::endl;
-
+        auto bind = std::bind(std::plus<>(),1,2.998); /// won't compile in C++11. In C++14 it is possible to omit type in general templates.
+        std::cout << bind() << std::endl;
     }
 
 
