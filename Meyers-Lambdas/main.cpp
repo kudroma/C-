@@ -183,6 +183,9 @@ int main(int argc, char *argv[])
             std::cout << a << " " << b << " " << phi << " " << getDiff(phi) << std::endl;
         }
         std::cout << phi << " " << -1.0f/std::tan(phi) << std::endl;
+
+        auto bind = std::bind(std::plus<>(),1,2.998); /// won't compile in C++11. In C++14 it is possible to omit type in general templates.
+        std::cout << bind() << std::endl;
     }
 
 
