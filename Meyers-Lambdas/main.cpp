@@ -20,6 +20,7 @@
 #include <set>
 #include <chrono>
 #include <utility>
+#include <math.h>
 
 /// this test application is devoted to testing of new c++ feature
 /// after Scott Meyers book
@@ -162,7 +163,29 @@ int main(int argc, char *argv[])
                    << "Item 34: Prefer lambdas to std::bind"
                    << std::endl << std::endl;
 
+        auto a = 2.0f;
+        auto b = 3.14f;
+        auto phi = (a+b)/2.0;
+        auto getDiff = [](float phi){
+            return -phi - 1.0f/std::tan(phi);
+        };
+        while(std::abs(getDiff(phi)) > 0.005)
+        {
+            if(getDiff(phi) >= 0)
+            {
+                b = phi;
+            }
+            else
+            {
+                a = phi;
+            }
+            phi = (a+b)/2;
+            std::cout << a << " " << b << " " << phi << " " << getDiff(phi) << std::endl;
+        }
+        std::cout << phi << " " << -1.0f/std::tan(phi) << std::endl;
     }
+
+
 
 
     return a.exec();
