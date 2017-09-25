@@ -53,6 +53,18 @@ private:
     int m_x{1};
 };
 
+/// Item 36: Specify std::launch::async if asynchronicity is essential
+///
+template <typename F, typename... Ts>
+inline
+//std::future<std::result_of_t<F(Ts...)> >
+auto
+reallyAsync(F&& f, Ts&&... params)
+{
+    return std::async(std::launch::async,
+                      std::forward<F>(f),
+                      std::forward<Ts>(params)...);
+}
 
 
 
@@ -70,7 +82,7 @@ int main(int argc, char *argv[])
                    << "Item 35: Prefer task based programming to thread based"
                    << std::endl << std::endl;
         int i = std::atomic<int>(0);
-        auto func1 = [&i](){std::cout << "in func1. i = " << i++ << std::endl;};
+        auto func1 = [&i](){};
         auto func2 = [&i](){std::cout << "in func2. i = " << i++ << std::endl;};
         auto thread1 = std::thread(func1); /// thread based approach
         auto async = std::async(func2);   /// task based approach
@@ -85,6 +97,7 @@ int main(int argc, char *argv[])
 //        {
 //            std::cout << "too many system threads!" << std::endl;
 //        }
+
         thread1.join();
     }
 
@@ -103,9 +116,49 @@ int main(int argc, char *argv[])
             auto async = std::async(func2);
             async.get();
         }
+        auto async1 = std::async(func1);
+//        while(async1.wait_for(100ms) !=
+//              std::future_status::ready)
+//        {
+//            /// there is potentially infinite loop
+//        }
+//        std::cout << std::endl << "end of loop!" << std::endl;
 
+        /// but it's ok, because func1 be done exactly in different loop
+        ///
+        auto async2 = std::async(std::launch::async, func1);
+        while(async2.wait_for(100ms) !=
+              std::future_status::ready)
+        {
+            /// there is no potentially infinite loop
+        }
+        std::cout << std::endl << "end of loop!" << std::endl;
+
+        /// another solution
+        ///
+        auto func3 = [](){std::this_thread::sleep_for(2s);};
+        auto async3 = std::async(func3);
+        if(async3.wait_for(100ms) == std::future_status::deferred)
+        {
+            async3.get();
+        }
+        else
+        {
+            std::cout << "task isn't defered!" << std::endl;
+        }
+        std::cout << "after condition!" << std::endl;
+        reallyAsync(func3);
+        std::cout << "after really async!" << std::endl;
     }
 
+/// Item 37: Make std::threads unjoinable on all parts
+///
+    if(true)
+    {
+        std::cout <<  std::endl << std::endl << std:: endl
+                   << "Item 37: Make std::threads unjoinable on all parts"
+                   << std::endl << std::endl;
+    }
 
     return a.exec();
 }
