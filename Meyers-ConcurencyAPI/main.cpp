@@ -28,6 +28,8 @@
 /// Chapter6: Concurrency API
 ///
 
+using namespace std::literals;
+
 template<typename T>
 void showTypeBoost(T&& param)
 {
@@ -96,6 +98,11 @@ int main(int argc, char *argv[])
         int i = std::atomic<int>(0);
         auto func1 = [&i](){std::cout << "in func1. i = " << i++ << std::endl;};
         auto func2 = [&i](){std::cout << "in func2. i = " << i++ << std::endl;};
+        for(int i = 0; i < 10; i++)
+        {
+            auto async = std::async(func2);
+            async.get();
+        }
 
     }
 
