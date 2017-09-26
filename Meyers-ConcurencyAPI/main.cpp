@@ -66,6 +66,35 @@ reallyAsync(F&& f, Ts&&... params)
                       std::forward<Ts>(params)...);
 }
 
+/// Item 37: Make std::threads unjoinable on all parts
+///
+class ThreadRAII
+{
+public:
+    enum class DtorAction{ join, detach };
+    ThreadRAII(std::thread&& t, DtorAction a) : action(a), t(std::move(t)) {}
+    ~ThreadRAII()
+    {
+        if(t.joinable()){
+            if(action == DtorAction::join){
+                t.join();
+            }else{
+                t.detach();
+            }
+        }
+    }
+    ThreadRAII(ThreadRAII&&) = default;
+    ThreadRAII& operator= (ThreadRAII&&) = default;
+
+    std::thread& get() {return t;}
+
+private:
+    DtorAction action;
+    std::thread t;
+};
+
+
+
 
 
 
@@ -158,6 +187,23 @@ int main(int argc, char *argv[])
         std::cout <<  std::endl << std::endl << std:: endl
                    << "Item 37: Make std::threads unjoinable on all parts"
                    << std::endl << std::endl;
+        constexpr auto tenMillions = 10'000'000;
+        //auto thread1 = std::thread([](){}); /// program will be terminated because of destructor of std::thread is called when it is joinable
+        std::cout << "program continue to work" << std::endl << std::endl;
+        auto thread2 = std::thread([](){std::cout << "inside thread 2" << std::endl;});
+        auto thread3 = std::thread([](){std::cout << "inside thread 3" << std::endl;});
+        ThreadRAII raii1(std::move(thread2), ThreadRAII::DtorAction::join);
+        ThreadRAII raii2(std::move(thread3), ThreadRAII::DtorAction::detach);
+    }
+
+/// Item 38: Be aware of varying thread handle destructor behavior
+///
+    if(true)
+    {
+        std::cout <<  std::endl << std::endl << std:: endl
+                   << "Item 38: Be aware of varying thread handle destructor behavior"
+                   << std::endl << std::endl;
+
     }
 
     return a.exec();
