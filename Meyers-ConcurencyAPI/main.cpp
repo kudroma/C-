@@ -140,10 +140,23 @@ int main(int argc, char *argv[])
         int i = std::atomic<int>(0);
         auto func1 = [&i](){std::cout << "in func1. i = " << i++ << std::endl;};
         auto func2 = [&i](){std::cout << "in func2. i = " << i++ << std::endl;};
+        std::cout << std::endl << "std::async" << std::endl;
         for(int i = 0; i < 10; i++)
         {
             auto async = std::async(func2);
             async.get();
+        }
+        std::cout << std::endl << "std::thread join" << std::endl;
+        for(int i = 0; i < 10; i++)
+        {
+            auto thread = std::thread(func2);
+            thread.join();
+        }
+        std::cout << std::endl << "std::thread detach" << std::endl;
+        for(int i = 0; i < 10; i++)
+        {
+            auto thread = std::thread(func2);
+            thread.detach();
         }
         auto async1 = std::async(func1);
 //        while(async1.wait_for(100ms) !=
@@ -202,6 +215,21 @@ int main(int argc, char *argv[])
     {
         std::cout <<  std::endl << std::endl << std:: endl
                    << "Item 38: Be aware of varying thread handle destructor behavior"
+                   << std::endl << std::endl;
+        auto func1 = [](){std::cout << "inside func1" << std::endl; return 1;};
+        std::packaged_task<int()>pt(func1);
+        auto fut = pt.get_future();
+        std::thread t(std::move(pt));
+        t.join();
+        std::cout << "end of item 38" << std::endl;
+    }
+
+/// Item 39: Consider void futures for one-shot event communication
+///
+    if(true)
+    {
+        std::cout <<  std::endl << std::endl << std:: endl
+                   << "Item 39: Consider void futures for one-shot event communication"
                    << std::endl << std::endl;
 
     }
