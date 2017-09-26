@@ -231,8 +231,35 @@ int main(int argc, char *argv[])
         std::cout <<  std::endl << std::endl << std:: endl
                    << "Item 39: Consider void futures for one-shot event communication"
                    << std::endl << std::endl;
+        std::condition_variable cv;
 
+        std::cout << std::endl << "Variant with condvar" << std::endl;
+        auto detectingTask = [cv = &cv](){
+            for(int i = 0; i < 10; i++)
+            {
+                std::cout << i << std::endl;
+                if(i >= 5)
+                {
+                    cv->notify_one();
+                }
+                std::this_thread::sleep_for(300ms);
+            }
+        };
+
+        auto reactingTask = [cv = &cv](){
+            {
+                std::mutex m;
+                std::unique_lock<std::mutex> lk(m);
+                cv->wait(lk);
+                std::cout << "reacting task is notified!" << std::endl;
+            }
+        };
+        auto thread1 = std::thread(detectingTask);
+        auto thread2 = std::thread(reactingTask);
+        thread1.join();
+        thread2.join();
     }
+    std::cout << std::endl << "variant with boolean flag" << std::endl;
 
     return a.exec();
 }
