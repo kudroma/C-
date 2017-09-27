@@ -258,8 +258,104 @@ int main(int argc, char *argv[])
         auto thread2 = std::thread(reactingTask);
         thread1.join();
         thread2.join();
+
+        std::cout << std::endl << "variant with boolean flag" << std::endl;
+        std::atomic<bool> flag{false};
+        auto detector = [flag = &flag](){
+            for(int i = 0; i < 10; i++)
+            {
+                std::cout << "in detector: " << i << std::endl;
+                if(i == 5)
+                {
+                    flag->store(true);
+                    std::cout << "detector: flag was triggered!" << std::endl;
+                }
+                std::this_thread::sleep_for(300ms);
+            }
+        };
+        auto reactor = [flag = &flag](){
+            while(!flag->load())
+            {
+               std::cout << "reactor: flag no!" << std::endl;
+               std::this_thread::sleep_for(100ms);
+            }
+            std::cout << "reactor: flag was triggered!" << std::endl;
+        };
+        auto asyncDetector = std::async(std::launch::async,detector);
+        auto asyncReactor = std::async(std::launch::async,reactor);
+        asyncDetector.get();
+        asyncReactor.get();
+
+        std::cout << std::endl << "variant with combined condvar and boolean flag" << std::endl;
+        bool flag1{false};
+        std::condition_variable cv1;
+        auto detector1 = [cv = &cv1, flag = &flag1](){
+            std::mutex m1;
+            for(int i = 0; i < 10; i++)
+            {
+                std::cout << "in detector: " << i << std::endl;
+                if(i == 5)
+                {
+                    {
+                        std::lock_guard<std::mutex> g1(m1);
+                        *flag = true;
+                        std::cout << "detector: flag was triggered!" << std::endl;
+                    }
+                    cv->notify_one();
+                }
+                std::this_thread::sleep_for(300ms);
+            }
+        };
+        auto reactor1 = [cv = &cv1, flag = &flag1](){
+            std::mutex m1;
+            std::unique_lock<std::mutex> lk(m1);
+            cv->wait(lk,[flag = flag]{return *flag;});
+            std::cout << "reactor: flag was triggered!" << std::endl;
+        };
+        auto asyncDetector1 = std::async(std::launch::async,detector1);
+        auto asyncReactor1 = std::async(std::launch::async,reactor1);
+        asyncDetector1.get();
+        asyncReactor1.get();
+
+
+        std::cout << std::endl << "variant with future" << std::endl;
+        std::promise<void> p;
+
+        auto detector2 = [p = &p](){
+            std::mutex m1;
+            for(int i = 0; i < 10; i++)
+            {
+                std::cout << "in detector: " << i << std::endl;
+                if(i == 5)
+                {
+                    {
+                        p->set_value();
+                        std::cout << "detector: flag was triggered!" << std::endl;
+                    }
+                }
+                std::this_thread::sleep_for(300ms);
+            }
+        };
+        auto reactor2 = [p = &p](){
+            p->get_future().wait();
+            std::cout << "reactor: flag was triggered!" << std::endl;
+        };
+        auto asyncDetector2 = std::async(std::launch::async,detector2);
+        auto asyncReactor2 = std::async(std::launch::async,reactor2);
+        asyncDetector2.get();
+        asyncReactor2.get();
+
     }
-    std::cout << std::endl << "variant with boolean flag" << std::endl;
+
+/// Item 40: Use std::atomic for concurrency, volatile for special memory
+///
+    if(true)
+    {
+        std::cout <<  std::endl << std::endl << std:: endl
+                   << "Item 40: Use std::atomic for concurrency, volatile for special memory"
+                   << std::endl << std::endl;
+
+    }
 
     return a.exec();
 }
