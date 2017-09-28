@@ -94,7 +94,10 @@ private:
 };
 
 
-
+/// Item 40: Use std::atomic for concurrency, volatile for special memory
+///
+std::atomic<int> ac{0};
+volatile int vc{0};
 
 
 
@@ -354,7 +357,32 @@ int main(int argc, char *argv[])
         std::cout <<  std::endl << std::endl << std:: endl
                    << "Item 40: Use std::atomic for concurrency, volatile for special memory"
                    << std::endl << std::endl;
+        std::atomic<int> ai{0};
+        ai = 10;
+        ++ai;
+        std::cout << "ai = " << ai << std::endl;
+        auto func1 = []{
+            for(int i =0; i < 30; i++)
+            {
+                vc++;
+                ac++;
+                std::cout << ac << " : " << vc << std::endl;
+            }
+        };
 
+        auto func2 = []{
+            for(int i =0; i < 30; i++)
+            {
+                vc++;
+                ac++;
+                std::cout << ac << " " << vc << std::endl;
+            }
+        };
+        auto thread1 = std::thread(func1);
+        auto thread2 = std::thread(func2);
+        thread1.join();
+        thread2.join();
+        std::cout << "ac = " << ac << " vc =  " << vc << std::endl;
     }
 
     return a.exec();
