@@ -69,5 +69,15 @@ int main(int argc, char *argv[])
 
     }
 
+/// Item 42: Consider emplacement instead of insertion
+///
+    if(true)
+    {
+        std::cout <<  std::endl << std::endl << std:: endl
+                   << "Item 42: Consider emplacement instead of insertion"
+                   << std::endl << std::endl;
+
+    }
+
     return a.exec();
 }
