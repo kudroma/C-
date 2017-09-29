@@ -52,8 +52,19 @@ private:
     int m_x{1};
 };
 
+/// Item 42: Consider emplacement instead of insertion
+///
+class ForExplicitInterpretation1
+{
+public:
+    ForExplicitInterpretation1(int i = 0){}
+};
 
-
+class ForExplicitInterpretation2
+{
+public:
+    explicit ForExplicitInterpretation2(int i = 0){}
+};
 
 int main(int argc, char *argv[])
 {
@@ -77,6 +88,8 @@ int main(int argc, char *argv[])
                    << "Item 42: Consider emplacement instead of insertion"
                    << std::endl << std::endl;
 
+        ForExplicitInterpretation1 object1 = 1;
+        //ForExplicitInterpretation2 object2 = 2; /// error constructor with integer is explicit!
     }
 
     return a.exec();
