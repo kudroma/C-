@@ -48,6 +48,11 @@ class Investment
 {
 public:
     int x()const{return m_x;}
+
+    Investment()=default;
+    Investment(const Investment&){std::cout << "inside copy ctor!" << std::endl;}
+    Investment(Investment&&) = default;
+
 private:
     int m_x{1};
 };
@@ -91,6 +96,17 @@ int main(int argc, char *argv[])
         ForExplicitInterpretation1 object1 = 1;
         //ForExplicitInterpretation2 object2 = 2; /// error constructor with integer is explicit!
     }
+
+    Investment inv;
+
+    Investment inv2(inv);
+
+    auto&& inv3 = Investment();
+
+    auto func = [](auto&& inv){inv;};
+    func(inv);
+    func(inv2);
+    func(inv3);
 
     return a.exec();
 }
