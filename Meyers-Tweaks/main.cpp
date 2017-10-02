@@ -103,10 +103,5 @@ int main(int argc, char *argv[])
 
     auto&& inv3 = Investment();
 
-    auto func = [](auto&& inv){inv;};
-    func(inv);
-    func(inv2);
-    func(inv3);
-
     return a.exec();
 }
